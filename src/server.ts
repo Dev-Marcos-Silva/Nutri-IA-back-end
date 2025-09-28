@@ -5,7 +5,10 @@ import { planRoutes } from "./routes/plan"
 const app = fastify({
     logger: true
 })
-app.register(fastifyCors)
+app.register(fastifyCors, {
+    origin: "*",
+    methods: ["GET", "POST"]
+})
 
 app.get("/test", (req, res) =>{
     res.send("Rota de teste")

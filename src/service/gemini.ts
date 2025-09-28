@@ -8,6 +8,9 @@ const client = new GoogleGenAI(
         apiKey: process.env.GEMINI_API_KEY as string
     }
 )
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export async function* generateDietPlan(data: PlanResquest){
     const diretrizes = fs.readFileSync("knowledge/diretrizes.md", "utf-8")
@@ -15,7 +18,7 @@ export async function* generateDietPlan(data: PlanResquest){
     const stream = await client.models.generateContentStream({
         model: "gemini-2.5-flash",
         config: {
-            systemInstruction: buildSystemPrompt(),
+            systemInstruction: [buildSystemPrompt(), buildDocsSystemPrompt(diretrizes)] ,
             temperature: 0.6
         },
         contents: buildUserPrompt(data)
@@ -23,6 +26,11 @@ export async function* generateDietPlan(data: PlanResquest){
 
     for await(const chunk of stream){
         const delta = chunk.text
-        if(delta) yield delta
+        if(delta){
+            for (const word of delta.split(" ")) {
+                yield word + " ";
+                await sleep(30)
+            }
+        }
     }
 }
